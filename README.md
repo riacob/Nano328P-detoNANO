@@ -1,5 +1,7 @@
-# Project Aim
+# Project Objective
 Selling a kit to create your very own transmitter/receiver pair of detoNANO, while mantaining everything open-source.
+<br>
+PCB and software are still in a development phase.
 
 # Project Description
 This project aims towards creating a 2.4GHz radio-controlled remote detonator.
