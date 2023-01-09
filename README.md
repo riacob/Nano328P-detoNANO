@@ -53,15 +53,6 @@ This list excludes resistors
 - 2x 3D printed case
 - 2x 5V battery power sources with low noise output, currently in development
 
-# Ideas and notes
-- Tone library plays tones on the buzzer to give different audio feedbacks
-- Programmable channels via OLED interface
-- Programmable detonation delay (TX) via OLED interface
-- Abort button to lock the unit until restarted (and eventually send emergency signal to the receiver)
-- Power led blinks continuously on device lockup
-- Enumeration containing shutdown/lockup states, where the latest shutdown state is saved in EEPROM and printed on the OLED at startup
-- All the possible software and hardware safety routines
-
 # Credits
 Project by Riccardo Iacob & Fabio Grossi
 <br>
