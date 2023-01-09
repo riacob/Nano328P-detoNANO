@@ -1,20 +1,30 @@
-// 8 jan 2023
+/**
+ * @file userconfig.h
+ * @author Riccardo Iacob
+ * @brief 
+ * @version 0.1
+ * @date 2023-01-08
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifndef USERCONFIG_H
 #define USERCONFIG_H
 
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <RF24.h>
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJSON.h>
 
 typedef struct
 {
     // JSON key: rc
     uint8_t radioChannel;
-    // JSON key: ta
-    uint8_t targetAddress[5];
-    // JSON key: oa
-    uint8_t ownAddress[5];
+    // JSON key: tid
+    uint8_t targetID[5];
+    // JSON key: oid
+    uint8_t ownID[5];
     // JSON key: dd
     uint32_t detonationDelay;
 } userconfig_s;

@@ -1,4 +1,13 @@
-// 8 jan 2023
+/**
+ * @file main_tx.cpp
+ * @author Riccardo Iacob
+ * @brief
+ * @version 0.1
+ * @date 2023-01-08
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #include <Arduino.h>
 #include <printf.h>
 #include <SPI.h>
@@ -52,8 +61,8 @@ void setup()
     radio.setChannel(masterConfig.radioChannel);
     radio.setPALevel(RF24_PA_LEVEL);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
-    radio.openWritingPipe(masterConfig.targetAddress);
-    radio.openReadingPipe(1, masterConfig.ownAddress);
+    radio.openWritingPipe(masterConfig.targetID);
+    radio.openReadingPipe(1, masterConfig.ownID);
     radio.stopListening();
 
     oled.begin(&Adafruit128x64, I2C_OLED_ADDRESS);
@@ -125,17 +134,17 @@ void switchScreen(int *screenIdx)
         oled.println("TX CONFIGURATION");
         oled.print("Channel: ");
         oled.println((int)masterConfig.radioChannel);
-        oled.print("targAdd: ");
+        oled.print("targID: ");
         for (int i = 0; i < 5; i++)
         {
-            oled.print((int)masterConfig.targetAddress[i]);
+            oled.print((int)masterConfig.targetID[i]);
             oled.print(" ");
         }
         oled.println();
-        oled.print("ownAdd: ");
+        oled.print("ownID: ");
         for (int i = 0; i < 5; i++)
         {
-            oled.print((int)masterConfig.ownAddress[i]);
+            oled.print((int)masterConfig.ownID[i]);
             oled.print(" ");
         }
         oled.println();
@@ -151,17 +160,17 @@ void switchScreen(int *screenIdx)
         oled.println("RX CONFIGURATION");
         oled.print("Channel: ");
         oled.println((int)slaveConfig.radioChannel);
-        oled.print("targAdd: ");
+        oled.print("targID: ");
         for (int i = 0; i < 5; i++)
         {
-            oled.print((int)slaveConfig.targetAddress[i]);
+            oled.print((int)slaveConfig.targetID[i]);
             oled.print(" ");
         }
         oled.println();
-        oled.print("ownAdd: ");
+        oled.print("ownID: ");
         for (int i = 0; i < 5; i++)
         {
-            oled.print((int)slaveConfig.ownAddress[i]);
+            oled.print((int)slaveConfig.ownID[i]);
             oled.print(" ");
         }
         oled.println();
@@ -205,13 +214,13 @@ void switchScreen(int *screenIdx)
         }
         break;
     }
-    // Edit tx detonation delay
+    // Edit detonation delay
     case 5:
     {
         uint8_t okPressed = 0;
         oled.setFont(font5x7);
         oled.clear();
-        oled.println("Set TX detonationDelay");
+        oled.println("Set detonationDelay");
         oled.print("Current value: ");
         oled.println(masterConfig.detonationDelay);
         oled.println("Press OK to save");
@@ -222,8 +231,10 @@ void switchScreen(int *screenIdx)
                 if (masterConfig.detonationDelay == UINT32_MAX)
                 {
                     masterConfig.detonationDelay = 0;
+                    slaveConfig.detonationDelay = 0;
                 }
                 masterConfig.detonationDelay += 5000;
+                slaveConfig.detonationDelay += 5000;
                 oled.clearField(0, 4, 5);
                 oled.print(masterConfig.detonationDelay);
             }
@@ -232,8 +243,10 @@ void switchScreen(int *screenIdx)
                 if (masterConfig.detonationDelay <= 0)
                 {
                     masterConfig.detonationDelay = 0;
+                    slaveConfig.detonationDelay = 0;
                 }
-                masterConfig.detonationDelay--;
+                masterConfig.detonationDelay -= 5000;
+                slaveConfig.detonationDelay -= 5000;
                 oled.clearField(0, 4, 5);
                 oled.print(masterConfig.detonationDelay);
             }

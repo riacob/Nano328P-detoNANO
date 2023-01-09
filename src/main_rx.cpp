@@ -1,4 +1,13 @@
-// 08 jan 2023
+/**
+ * @file main_rx.cpp
+ * @author Riccardo Iacob
+ * @brief 
+ * @version 0.1
+ * @date 2023-01-08
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <Arduino.h>
 #include <printf.h>
 #include <SPI.h>
@@ -47,8 +56,8 @@ void setup()
     radio.begin();
     radio.setChannel(slaveConfig.radioChannel);
     radio.setPALevel(RF24_PA_LEVEL);
-    radio.openWritingPipe(slaveConfig.targetAddress);
-    radio.openReadingPipe(1, slaveConfig.ownAddress);
+    radio.openWritingPipe(slaveConfig.targetID);
+    radio.openReadingPipe(1, slaveConfig.ownID);
     radio.startListening();
     
 #if DEBUG == true

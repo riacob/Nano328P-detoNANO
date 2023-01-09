@@ -1,4 +1,13 @@
-// 8 jan 2023
+/**
+ * @file hardware.h
+ * @author Riccardo Iacob
+ * @brief 
+ * @version 0.1
+ * @date 2023-01-08
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 

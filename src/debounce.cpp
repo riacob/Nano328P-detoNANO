@@ -1,4 +1,13 @@
-// 8 jan 2023
+/**
+ * @file debounce.cpp
+ * @author Riccardo Iacob
+ * @brief 
+ * @version 0.1
+ * @date 2023-01-08
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "debounce.h"
 
 void DebouncedButton::begin(uint8_t buttonPin)

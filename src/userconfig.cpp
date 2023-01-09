@@ -1,21 +1,30 @@
-// 8 jan 2023
+/**
+ * @file userconfig.cpp
+ * @author Riccardo Iacob
+ * @brief 
+ * @version 0.1
+ * @date 2023-01-08
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "userconfig.h"
 
 void setDefaultMasterConfig(userconfig_s *config)
 {
     config->radioChannel = 76;
 
-    config->targetAddress[0] = 'S';
-    config->targetAddress[1] = config->radioChannel;
-    config->targetAddress[2] = 0;
-    config->targetAddress[3] = 0;
-    config->targetAddress[4] = 0;
+    config->targetID[0] = 'S';
+    config->targetID[1] = config->radioChannel;
+    config->targetID[2] = 0;
+    config->targetID[3] = 0;
+    config->targetID[4] = 0;
 
-    config->ownAddress[0] = 'M';
-    config->ownAddress[1] = config->radioChannel;
-    config->ownAddress[2] = 0;
-    config->ownAddress[3] = 0;
-    config->ownAddress[4] = 0;
+    config->ownID[0] = 'M';
+    config->ownID[1] = config->radioChannel;
+    config->ownID[2] = 0;
+    config->ownID[3] = 0;
+    config->ownID[4] = 0;
 
     config->detonationDelay = 0;
 }
@@ -24,25 +33,25 @@ void setDefaultSlaveConfig(userconfig_s *config)
 {
     config->radioChannel = 76;
 
-    config->targetAddress[0] = 'M';
-    config->targetAddress[1] = config->radioChannel;
-    config->targetAddress[2] = 0;
-    config->targetAddress[3] = 0;
-    config->targetAddress[4] = 0;
+    config->targetID[0] = 'M';
+    config->targetID[1] = config->radioChannel;
+    config->targetID[2] = 0;
+    config->targetID[3] = 0;
+    config->targetID[4] = 0;
 
-    config->ownAddress[0] = 'S';
-    config->ownAddress[1] = config->radioChannel;
-    config->ownAddress[2] = 0;
-    config->ownAddress[3] = 0;
-    config->ownAddress[4] = 0;
+    config->ownID[0] = 'S';
+    config->ownID[1] = config->radioChannel;
+    config->ownID[2] = 0;
+    config->ownID[3] = 0;
+    config->ownID[4] = 0;
 
     config->detonationDelay = 0;
 }
 
 void writeConfig(userconfig_s *config)
 {
-    config->targetAddress[1] = config->radioChannel;
-    config->ownAddress[1] = config->radioChannel;
+    config->targetID[1] = config->radioChannel;
+    config->ownID[1] = config->radioChannel;
 
     EEPROM.put(0, *config);
 }
@@ -56,31 +65,31 @@ void printConfig(userconfig_s *config)
 {
     Serial.print("radioChannel: ");
     Serial.println(config->radioChannel);
-    Serial.print("targetAddress (char): ");
+    Serial.print("targetID (char): ");
     for (int i = 0; i < 5; i++)
     {
-        Serial.print((char)config->targetAddress[i]);
+        Serial.print((char)config->targetID[i]);
         Serial.print(" ");
     }
     Serial.println();
-    Serial.print("targetAddress (int): ");
+    Serial.print("targetID (int): ");
     for (int i = 0; i < 5; i++)
     {
-        Serial.print((int)config->targetAddress[i]);
+        Serial.print((int)config->targetID[i]);
         Serial.print(" ");
     }
     Serial.println();
-    Serial.print("ownAddress (char): ");
+    Serial.print("ownID (char): ");
     for (int i = 0; i < 5; i++)
     {
-        Serial.print((char)config->ownAddress[i]);
+        Serial.print((char)config->ownID[i]);
         Serial.print(" ");
     }
     Serial.println();
-    Serial.print("ownAddress (int): ");
+    Serial.print("ownID (int): ");
     for (int i = 0; i < 5; i++)
     {
-        Serial.print((int)config->targetAddress[i]);
+        Serial.print((int)config->targetID[i]);
         Serial.print(" ");
     }
     Serial.println();
@@ -90,7 +99,7 @@ void printConfig(userconfig_s *config)
 
 void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
 {
-    DynamicJsonDocument json(32);
+    DynamicJsonDocument json(64);
     uint8_t buf[32];
 
     json["rc"] = config->radioChannel;
@@ -99,21 +108,21 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     json.clear();
     radio->write(buf, 32);
 
-    json["ta"][0] = config->targetAddress[0];
-    json["ta"][1] = config->targetAddress[1];
-    json["ta"][2] = config->targetAddress[2];
-    json["ta"][3] = config->targetAddress[3];
-    json["ta"][4] = config->targetAddress[4];
+    json["tid"][0] = config->targetID[0];
+    json["tid"][1] = config->targetID[1];
+    json["tid"][2] = config->targetID[2];
+    json["tid"][3] = config->targetID[3];
+    json["tid"][4] = config->targetID[4];
     serializeJson(json, buf);
     serializeJson(json, Serial);
     json.clear();
     radio->write(buf, 32);
 
-    json["oa"][0] = config->ownAddress[0];
-    json["oa"][1] = config->ownAddress[1];
-    json["oa"][2] = config->ownAddress[2];
-    json["oa"][3] = config->ownAddress[3];
-    json["oa"][4] = config->ownAddress[4];
+    json["oid"][0] = config->ownID[0];
+    json["oid"][1] = config->ownID[1];
+    json["oid"][2] = config->ownID[2];
+    json["oid"][3] = config->ownID[3];
+    json["oid"][4] = config->ownID[4];
     serializeJson(json, buf);
     serializeJson(json, Serial);
     Serial.println();
@@ -130,7 +139,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
 
 int receiveConfigFromMaster(userconfig_s *config, uint8_t *dataBuffer)
 {
-    DynamicJsonDocument json(32);
+    DynamicJsonDocument json(64);
     deserializeJson(json, dataBuffer);
 
     // Automatically find the key-value pair in the json (only one per packet)
@@ -139,22 +148,22 @@ int receiveConfigFromMaster(userconfig_s *config, uint8_t *dataBuffer)
         config->radioChannel = json["rc"];
         return -1;
     }
-    else if (json.containsKey("ta"))
+    else if (json.containsKey("tid"))
     {
-        config->targetAddress[0] = json["ta"][0];
-        config->targetAddress[1] = json["ta"][1];
-        config->targetAddress[2] = json["ta"][2];
-        config->targetAddress[3] = json["ta"][3];
-        config->targetAddress[4] = json["ta"][4];
+        config->targetID[0] = json["tid"][0];
+        config->targetID[1] = json["tid"][1];
+        config->targetID[2] = json["tid"][2];
+        config->targetID[3] = json["tid"][3];
+        config->targetID[4] = json["tid"][4];
         return -1;
     }
-    else if (json.containsKey("oa"))
+    else if (json.containsKey("oid"))
     {
-        config->ownAddress[0] = json["oa"][0];
-        config->ownAddress[1] = json["oa"][1];
-        config->ownAddress[2] = json["oa"][2];
-        config->ownAddress[3] = json["oa"][3];
-        config->ownAddress[4] = json["oa"][4];
+        config->ownID[0] = json["oid"][0];
+        config->ownID[1] = json["oid"][1];
+        config->ownID[2] = json["oid"][2];
+        config->ownID[3] = json["oid"][3];
+        config->ownID[4] = json["oid"][4];
         return -1;
     }
     else if (json.containsKey("dd"))
