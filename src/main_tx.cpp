@@ -84,15 +84,6 @@ void loop()
         ctr_btn++;
         switchScreen(&ctr_btn);
     }
-    /*
-    uint8_t ack = radio.write(&packetBuffer, sizeof(packetBuffer));
-    Serial.print("Sent data, ");
-    Serial.println(ack ? "ACK" : "NACK");
-    oled.setFont(Adafruit5x7);
-    oled.clear();
-    oled.print(ack ? "ACK" : "NACK");
-    delay(1000);
-    */
 }
 
 void switchScreen(int *screenIdx)
