@@ -243,10 +243,3 @@ void switchScreen(int *screenIdx)
     }
     }
 }
-
-uint8_t digitalReadDebounce(uint8_t digitalPin)
-{
-    static uint16_t state = 0;
-    state = (state << 1) | digitalRead(digitalPin) | 0xfe00;
-    return (state == 0xff00);
-}
