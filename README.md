@@ -1,5 +1,5 @@
 # Project Description
-This project aims towards creating a 2.4GHz radio-controlled remote detonator, originally intended to ignite hydrogen filled baloons and such.
+This project aims towards creating a 2.4GHz radio-controlled remote detonator.
 <br>
 It is composed of two distinct parts, the transmitter and the receiver.
 <br>
@@ -7,17 +7,17 @@ The receiver, once turned on, waits for a device to connect, then allows the use
 <br>
 Both devices are configurable trough an intuitive UI on an SSD1306 128*64 0.96" OLED display. The receiver can also remotely receive configuration data from the transmitter.
 <br>
-The transmitter includes the option of setting a time delay before the transmission of the packet.
+Setting a time delay before the detonation is possible.
 
 # Safety Disclaimer
 <br>
-This device is intended exlusively for educational use. The makers do not condone its use for any violent acts towards people, animals or objects.
+This device is intended exlusively for educational use. The makers do not condone its use for any violent acts towards persons, animals or objects.
 <br>
 The makers of this project assume no responsibility for any damage to persons, animals or objects derived from any use of the provided devices.
 <br>
 Once the data packet is sent, it takes a minuscule amount of time to reach the receiver. Never approach the receiver when a detonate command was sent.
 <br>
-A key is required to turn the devices on, which in itself should be enough to prevent accidental activations.
+A key is required to turn the devices on. Only users with a key will be able to use the devices.
 <br>
 Moreover, the priming switch (lever) is protected with a flip-up cover. The detonation button is actually composed of two series buttons, to be pressed one with each hand.
 <br>
