@@ -49,10 +49,9 @@ This list excludes resistors
 - 4x Tactile push button
 - 2x Buzzer (not self oscillating)
 - 2x SPST lever switch w/ flip-up safety cover
-- 2x USB-C power bank module
-- 4x 18650 2200mAh li-ion battery
 - 2x PCB front panel
 - 2x 3D printed case
+- 2x 5V battery power sources with low noise output, currently in development
 
 # Ideas and notes
 - Tone library plays tones on the buzzer to give different audio feedbacks
