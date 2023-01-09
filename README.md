@@ -42,7 +42,7 @@ This list excludes resistors
 
 ### Common
 - 2x NRF24L01+PA SPI 2.4GHz transreceiver module (with antenna)
-- 2x Arduino Nano ATMega 328P
+- 2x Arduino Nano ATmega328P
 - 2x SSD1306 64x32 I2C OLED 0.96"
 - 2x RGB LED
 - 2x Key switch
