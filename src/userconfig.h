@@ -27,6 +27,10 @@ typedef struct
     uint8_t ownID[5];
     // JSON key: dd
     uint32_t detonationDelay;
+    // JSON key: pe
+    uint8_t pinEnabled;
+    // JSON key: pin
+    uint8_t pin[4];
 } userconfig_s;
 
 /**
