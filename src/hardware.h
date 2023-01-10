@@ -37,7 +37,6 @@
 #define RF24_PA_LEVEL RF24_PA_HIGH
 #define RF24_RETRIES_COUNT 3
 #define RF24_RETRIES_DELAY 5
-#define MENU_ITEMS 5
 #define DEBUG true
 
 #endif

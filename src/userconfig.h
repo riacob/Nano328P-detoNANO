@@ -1,7 +1,7 @@
 /**
  * @file userconfig.h
  * @author Riccardo Iacob
- * @brief 
+ * @brief Utilities to handle the configuration of transmitter and receiver
  * @version 0.1
  * @date 2023-01-08
  * 

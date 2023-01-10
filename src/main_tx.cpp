@@ -1,7 +1,7 @@
 /**
  * @file main_tx.cpp
  * @author Riccardo Iacob
- * @brief
+ * @brief Main file for the transmitter
  * @version 0.1
  * @date 2023-01-08
  *
@@ -21,6 +21,28 @@
 #include "userconfig.h"
 #include "debounce.h"
 
+/**
+ * @brief All possible OLED screen states
+ * 
+ * @note STATE_COUNT_USER and STATE_COUNT_AUTO shall always be at the bottom of the two lists
+ * @note Changing the order of the "user states" (first list) will change the order they will be displayed in on the OLED screen
+ */
+enum SCREEN_STATES
+{
+    // States accessible by the user
+    // For example home screen, setting screen...
+    STATE_PRINT_HOME_SCREEN,
+    STATE_PRINT_TUTORIAL,
+    STATE_PRINT_DEVICE_CONFIGURATION,
+    STATE_EDIT_COMMON_DETONATIONDELAY,
+    STATE_EDIT_TX_RADIOCHANNEL,
+    STATE_COUNT_USER,
+
+    // States only accessible by the system
+    // All status messages, for example "detonating in xxx mS"
+    STATE_COUNT_AUTO
+};
+
 RF24 radio(PIN_RF24_CE, PIN_RF24_CSN);
 SSD1306AsciiAvrI2c oled;
 DebouncedButton btnCenter;
@@ -29,23 +51,24 @@ DebouncedButton btnRight;
 userconfig_s masterConfig;
 userconfig_s slaveConfig;
 
+// The data buffer to be sent trough radio
 uint8_t packetBuffer[32] = "Hello from nRF24!";
+// The number of times the center button has been pressed
 int ctr_btn = 0;
+// Wether or not the device is unlocked
 bool deviceUnlocked = 0;
 
 uint8_t digitalReadDebounce(uint8_t digitalPin);
-void switchScreen(int *screenIdx, userconfig_s *config, uint8_t isReceiver = 0);
+void switchScreenState(int *screenIdx, userconfig_s *config);
 
 void setup()
 {
+    // Initialize GPIOs
     pinMode(PIN_LED_R, OUTPUT);
     pinMode(PIN_LED_G, OUTPUT);
     pinMode(PIN_LED_B, OUTPUT);
     pinMode(PIN_BUZZER, OUTPUT);
     pinMode(PIN_BTN_ABORT, INPUT_PULLUP);
-    // pinMode(PIN_BTN_CENTER, INPUT_PULLUP);
-    // pinMode(PIN_BTN_RIGHT, INPUT_PULLUP);
-    // pinMode(PIN_BTN_LEFT, INPUT_PULLUP);
     btnCenter.begin(PIN_BTN_CENTER);
     btnLeft.begin(PIN_BTN_LEFT);
     btnRight.begin(PIN_BTN_RIGHT);
@@ -55,10 +78,13 @@ void setup()
     pinMode(PIN_ARM, INPUT);
     pinMode(PIN_DETONATE, INPUT);
 
-    // readConfig(&masterConfig);
-    setDefaultMasterConfig(&masterConfig);
-    setDefaultSlaveConfig(&slaveConfig);
+    // Read saved config from EEPROM
+    readConfig(&masterConfig);
+    //setDefaultMasterConfig(&masterConfig);
+    //setDefaultSlaveConfig(&slaveConfig);
+    //writeConfig(&masterConfig);
 
+    // Initialize RF24
     radio.begin();
     radio.setChannel(masterConfig.radioChannel);
     radio.setPALevel(RF24_PA_LEVEL);
@@ -67,6 +93,7 @@ void setup()
     radio.openReadingPipe(1, masterConfig.ownID);
     radio.stopListening();
 
+    // Initialize SSD1306
     oled.begin(&Adafruit128x64, I2C_OLED_ADDRESS);
     delay(100);
     oled.setFont(TimesNewRoman16_bold);
@@ -79,13 +106,16 @@ void setup()
 #if DEBUG == true
     Serial.begin(BAUDRATE);
     printf_begin();
-    Serial.println("****************  RF24  ****************");
+    Serial.println("**************** RF24 ****************");
     radio.printPrettyDetails();
     Serial.println("**************** CONFIG ****************");
     printConfig(&masterConfig);
-    Serial.println("**************** EEPROM ****************");
-    printEEPROM();
+    //Serial.println("**************** EEPROM ****************");
+    //printEEPROM();
+    Serial.println("**************** DEBUG ****************");
     transmitConfigToSlave(&slaveConfig, &radio);
+    uint8_t rbfr[32] = {'C','{','"','r','c','"',':','7','6','}'};
+    receiveConfigFromMaster(&slaveConfig, rbfr);
 #endif
 }
 
@@ -93,41 +123,84 @@ void loop()
 {
     if (btnCenter.isPressed())
     {
+        if (ctr_btn > STATE_COUNT_USER) {
+            ctr_btn = 0;
+        }
         ctr_btn++;
-        switchScreen(&ctr_btn, &masterConfig);
+        switchScreenState(&ctr_btn, &masterConfig);
     }
 }
 
-void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
+void switchScreenState(int *screenIdx, userconfig_s *config)
 {
-    // Reset to main screen when we reach the system-access-only screens
-    if (*screenIdx > MENU_ITEMS)
+    // If screenIdx has a value that doesn't exist in the SCREEN_STATE enum, set it to zero
+    if (*screenIdx > STATE_COUNT_AUTO)
     {
-        *screenIdx = 0;
+        *screenIdx = STATE_PRINT_HOME_SCREEN;
+    }
+    // If pin is not enabled, unlock device
+    if (!config->pinEnabled) {
+        deviceUnlocked = 1;
     }
     // If pin is enabled, ask for pin
-    if ((config->pinEnabled && (*screenIdx > 0)) || deviceUnlocked)
+    if ((config->pinEnabled && (*screenIdx > 0)) && !deviceUnlocked)
     {
         // Number of times the OK button has been pressed
         // When it was pressed 4 times, all digits were entered, check pin
         uint8_t okPresses = 0;
+        // PIN entered by the user
         uint8_t pin[4] = {0};
+        // Update OLED only when something changed
+        uint8_t oledNeedsUpdate = 1;
         while (okPresses < 4)
         {
-            oled.setFont(font5x7);
-            oled.clear();
-            oled.println("Device Locked");
-            oled.println("Enter PIN");
-            oled.println();
-            oled.print("[ ");
-            oled.print(pin[0]);
-            oled.print(" - ");
-            oled.print(pin[1]);
-            oled.print(" - ");
-            oled.print(pin[2]);
-            oled.print(" - ");
-            oled.print(pin[3]);
-            oled.print(" ]");
+            if (oledNeedsUpdate)
+            {
+                oled.setFont(font5x7);
+                oled.clear();
+                oled.println("    Device Locked");
+                oled.println("      Enter PIN");
+                oled.println();
+                oled.print("  [ ");
+                oled.print(pin[0]);
+                oled.print(" - ");
+                oled.print(pin[1]);
+                oled.print(" - ");
+                oled.print(pin[2]);
+                oled.print(" - ");
+                oled.print(pin[3]);
+                oled.println(" ]");
+                // Print cursor under the digit the user is currently editing
+                // [ 0 - 0 - 0 - 0 ]
+                //   -
+                if (okPresses == 0)
+                {
+                    oled.println("    -");
+                }
+                if (okPresses == 1)
+                {
+                    oled.println("        -");
+                }
+                if (okPresses == 2)
+                {
+                    oled.println("            -");
+                }
+                if (okPresses == 3)
+                {
+                    oled.println("                -");
+                }
+                oled.println();
+                oled.println(" OK to change digit");
+                oled.println("UP/DOWN to change val");
+                oledNeedsUpdate = 0;
+            }
+            // If the OK button is pressed, increment the number of times it has been pressed
+            if (btnCenter.isPressed())
+            {
+                okPresses++;
+                // OLED // OLED contents have changed, so update it have changed, so update it
+                oledNeedsUpdate = 1;
+            }
             // Digits go from 0 to 9
             // If value is >9, roll over to 0
             // If value is <0, roll over to 9
@@ -140,7 +213,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[0] = 0;
                     }
-                    pin[0]++;
+                    else
+                    {
+                        pin[0]++;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
                 if (btnLeft.isPressed())
                 {
@@ -148,7 +226,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[0] = 9;
                     }
-                    pin[0]--;
+                    else
+                    {
+                        pin[0]--;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
             }
             // Editing second digit
@@ -160,7 +243,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[1] = 0;
                     }
-                    pin[1]++;
+                    else
+                    {
+                        pin[1]++;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
                 if (btnLeft.isPressed())
                 {
@@ -168,7 +256,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[1] = 9;
                     }
-                    pin[1]--;
+                    else
+                    {
+                        pin[1]--;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
             }
             // Editing third digit
@@ -180,7 +273,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[2] = 0;
                     }
-                    pin[2]++;
+                    else
+                    {
+                        pin[2]++;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
                 if (btnLeft.isPressed())
                 {
@@ -188,7 +286,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[2] = 9;
                     }
-                    pin[2]--;
+                    else
+                    {
+                        pin[2]--;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
             }
             // Editing fourth digit
@@ -200,7 +303,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[3] = 0;
                     }
-                    pin[3]++;
+                    else
+                    {
+                        pin[3]++;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
                 if (btnLeft.isPressed())
                 {
@@ -208,7 +316,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
                     {
                         pin[3] = 9;
                     }
-                    pin[3]--;
+                    else
+                    {
+                        pin[3]--;
+                    }
+                    // OLED contenents have changed, so update it
+                    oledNeedsUpdate = 1;
                 }
             }
         }
@@ -219,39 +332,29 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
             if (pin[i] != config->pin[i])
             {
                 deviceUnlocked = 0;
-                switchScreen(screenIdx, config);
+                *screenIdx = STATE_PRINT_HOME_SCREEN;
+                // OLED contenents have changed, so update it
+                oled.setFont(font5x7);
+                oled.clear();
+                oled.println("    Device Locked");
+                oled.println("      Enter PIN");
+                oled.println();
+                oled.println("      Wrong PIN");
+                oled.println("  Press OK to retry");
+                oled.println();
+                oled.println(" OK to change digit");
+                oled.println("UP/DOWN to change val");
+                return;
             }
-            // If pin is correct, continue
-            else
-            {
-                deviceUnlocked = 1;
-                switchScreen(screenIdx, config);
-            }
         }
-#if DEBUG == true
-        int a;
-        Serial.print("Entered PIN: ");
-        for (a = 0; a < 4; a++)
-        {
-            Serial.print((int)pin[a]);
-            Serial.print("-");
-        }
-        Serial.println();
-        Serial.print("Correct PIN: ");
-        for (a = 0; a < 4; a++)
-        {
-            Serial.print((int)config->pin[a]);
-            Serial.print("-");
-        }
-        Serial.println();
-        Serial.print("isCorrect: ");
-        Serial.println(deviceUnlocked);
-#endif
+        // If pin is correct, continue
+        deviceUnlocked = 1;
+        *screenIdx = STATE_PRINT_HOME_SCREEN;
     }
     switch (*screenIdx)
     {
     // Print home screen
-    case 0:
+    case STATE_PRINT_HOME_SCREEN:
     {
         oled.setFont(font5x7);
         oled.clear();
@@ -262,7 +365,7 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
         break;
     }
     // Print button tutorial
-    case 1:
+    case STATE_PRINT_TUTORIAL:
     {
         oled.setFont(font5x7);
         oled.clear();
@@ -273,11 +376,17 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
         break;
     }
     // Print device configuration
-    case 2:
+    case STATE_PRINT_DEVICE_CONFIGURATION:
     {
         oled.setFont(font5x7);
         oled.clear();
         oled.println("CONFIGURATION");
+        oled.print("Role: ");
+        if (config->ownID[0] == 'M') {
+            oled.println("TRANSMITTER");
+        } else {
+            oled.println("RECEIVER");
+        }
         oled.print("Channel: ");
         oled.println((int)config->radioChannel);
         oled.print("targID: ");
@@ -300,40 +409,36 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
     }
     // COMMON SETTINGS
     // Edit detonation delay
-    case 3:
+    case STATE_EDIT_COMMON_DETONATIONDELAY:
     {
         uint8_t okPressed = 0;
         oled.setFont(font5x7);
         oled.clear();
         oled.println("Set detonationDelay");
         oled.print("Current value: ");
-        oled.println(masterConfig.detonationDelay);
+        oled.println(config->detonationDelay);
         oled.println("Press OK to save");
         while (!okPressed)
         {
             if (btnRight.isPressed())
             {
-                if (masterConfig.detonationDelay == UINT32_MAX)
+                if (config->detonationDelay == UINT32_MAX)
                 {
-                    masterConfig.detonationDelay = 0;
-                    slaveConfig.detonationDelay = 0;
+                    config->detonationDelay = 0;
                 }
-                masterConfig.detonationDelay += 5000;
-                slaveConfig.detonationDelay += 5000;
-                oled.clearField(0, 4, 5);
-                oled.print(masterConfig.detonationDelay);
+                config->detonationDelay += 5000;
+                oled.clearField(0, 20, 5);
+                oled.print(config->detonationDelay);
             }
             if (btnLeft.isPressed())
             {
-                if (masterConfig.detonationDelay <= 0)
+                if (config->detonationDelay <= 0)
                 {
-                    masterConfig.detonationDelay = 0;
-                    slaveConfig.detonationDelay = 0;
+                    config->detonationDelay = 0;
                 }
-                masterConfig.detonationDelay -= 5000;
-                slaveConfig.detonationDelay -= 5000;
-                oled.clearField(0, 4, 5);
-                oled.print(masterConfig.detonationDelay);
+                config->detonationDelay -= 5000;
+                oled.clearField(0, 20, 5);
+                oled.print(config->detonationDelay);
             }
             okPressed = btnCenter.isPressed();
         }
@@ -341,8 +446,12 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
     }
     // TRANSMITTER ONLY SETTINGS
     // Edit tx radio channel
-    case 4:
+    case STATE_EDIT_TX_RADIOCHANNEL:
     {
+        // If the current device is not a transmitter, move on
+        if (config->ownID[0] != 'M') {
+            break;
+        }
         uint8_t okPressed = 0;
         oled.setFont(font5x7);
         oled.clear();
@@ -376,6 +485,6 @@ void switchScreen(int *screenIdx, userconfig_s *config, uint8_t deviceMode)
         }
         break;
     }
-    // RECEIVER ONLY SETTINGS
+        // RECEIVER ONLY SETTINGS
     }
 }
