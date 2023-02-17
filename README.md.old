@@ -63,6 +63,6 @@ Started hardware development on December 29, 2022
 Started firmware development on January 8, 2023
 
 # External Libraries
-- [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
-- [SSD1306Ascii](https://github.com/greiman/SSD1306Ascii)
-- [RF24](https://github.com/nRF24/RF24)
+- [ArduinoJson (MIT)](https://github.com/bblanchon/ArduinoJson)
+- [SSD1306Ascii (MIT)](https://github.com/greiman/SSD1306Ascii)
+- [RF24 (GPL v2)](https://github.com/nRF24/RF24)
