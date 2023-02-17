@@ -60,7 +60,7 @@ void setup()
 
     // Read saved config from EEPROM
     readConfig(&masterConfig);
-    // setDefaultMasterConfig(&masterConfig);
+    setDefaultMasterConfig(&masterConfig);
     // setDefaultSlaveConfig(&slaveConfig);
     // writeConfig(&masterConfig);
 

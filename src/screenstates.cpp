@@ -1,6 +1,6 @@
 #include "screenstates.h"
 
-void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, DebouncedButton* btnRight, DebouncedButton* btnLeft, uint8_t* isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig = nullptr)
+void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, DebouncedButton* btnRight, DebouncedButton* btnLeft, uint8_t* isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
 {
     // If screenIdx has a value that doesn't exist in the SCREEN_STATE enum, set it to zero
     if (*screenIdx > STATE_COUNT_AUTO)
@@ -14,6 +14,7 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
     // If pin is enabled, ask for pin
     if ((config->pinEnabled && (*screenIdx > 0)) && !*isUnlocked)
     {
+        Serial.println("pin enabled");
         // Number of times the OK button has been pressed
         // When it was pressed 4 times, all digits were entered, check pin
         uint8_t okPresses = 0;

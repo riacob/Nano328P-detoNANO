@@ -28,7 +28,7 @@ void setDefaultMasterConfig(userconfig_s *config)
 
     config->detonationDelay = 0;
 
-    config->pinEnabled = 0;
+    config->pinEnabled = 1;
 
     config->pin[0] = 0;
     config->pin[1] = 0;
@@ -54,7 +54,7 @@ void setDefaultSlaveConfig(userconfig_s *config)
 
     config->detonationDelay = 0;
 
-    config->pinEnabled = 0;
+    config->pinEnabled = 1;
 
     config->pin[0] = 0;
     config->pin[1] = 0;
