@@ -12,3 +12,10 @@ Note: the key switch has been bypassed by a jumper link, since this model will b
 The safety layer the key was meant to add is replaced by the ability to unplug the external power, which is impossible in the enclosed "Pro" and "Ultimate" models.
 <br>
 The devices, as stated in the documentation, can be PIN-protected either way, thus ensuring safety of operation.
+
+# Legal
+This project is released under the BSD v2 License.
+- This device is intented for educational use only.
+- The makers of this project are not responsible for any damage caused to objects, animals or persons.
+- This device is not intended for laymen.
+- This documentation could be changed at any time without previous announcement, thus it's the user's duty to check for updates.
