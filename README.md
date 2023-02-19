@@ -23,6 +23,7 @@ The following external libraries are used:
 - [ArduinoJson (MIT)](https://github.com/bblanchon/ArduinoJson)
 - [SSD1306Ascii (MIT)](https://github.com/greiman/SSD1306Ascii)
 - [RF24 (GPL v2)](https://github.com/nRF24/RF24)
+<br>
 Disclaimers:
 - This device is intented for educational use only.
 - The makers of this project are not responsible for any damage caused to objects, animals or persons.
