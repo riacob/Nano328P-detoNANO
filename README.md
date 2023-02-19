@@ -1,7 +1,8 @@
 # detoNANO
 Radio controlled detonator (transmitter/receiver pair) based on Arduino Nano with ATmega328P.
 <br>
-## Functional description
+Functional description
+<br>
 Two communicating devices* (transmitter/receiver or master/slave), once correctly configured, get linked together with a keepalive packet**.
 <br>
 After the user arms both devices, and steps away from the receiver to a safe distance, the user can press both detonation buttons and wait, if set, for the timer to expire, and thus for the detonation to happen.
