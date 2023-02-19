@@ -1,5 +1,8 @@
 # detoNANO
 Radio controlled detonator based on Arduino Nano with ATmega328P
+Refer to the [Wiki](https://github.com/riacob/Nano328P-detoNANO/wiki) for more information
+
+# Hardware
 ![First Basic Kit Build](/docs/basic_model_kit_1.jpg "First Basic Kit Build")
 First build of the "Basic" Kit
 <br>
