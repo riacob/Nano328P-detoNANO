@@ -13,8 +13,18 @@ The safety layer the key was meant to add is replaced by the ability to unplug t
 <br>
 The devices, as stated in the documentation, can be PIN-protected either way, thus ensuring safety of operation.
 
+# Software
+Perhaps the most "boring" part of this project. As always, it's just lines of code, organized and commented in such a way that code is easy to read, debug, mantain and update, while also mantaining modularity. It might look a little bloated, but that's just how it is for big complex projects with modularity and ease of human-readability in mind.
+
 # Legal
 This project is released under the BSD v2 License.
+<br>
+The following external libraries are used:
+- [ArduinoJson (MIT)](https://github.com/bblanchon/ArduinoJson)
+- [SSD1306Ascii (MIT)](https://github.com/greiman/SSD1306Ascii)
+- [RF24 (GPL v2)](https://github.com/nRF24/RF24)
+<br>
+Disclaimers:
 - This device is intented for educational use only.
 - The makers of this project are not responsible for any damage caused to objects, animals or persons.
 - This device is not intended for laymen.
