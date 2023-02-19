@@ -15,6 +15,8 @@ The devices, as stated in the documentation, can be PIN-protected either way, th
 
 # Software
 Perhaps the most "boring" part of this project. As always, it's just lines of code, organized and commented in such a way that code is easy to read, debug, mantain and update, while also mantaining modularity. It might look a little bloated, but that's just how it is for big complex projects with modularity and ease of human-readability in mind.
+<br>
+All the coding was done using PlatformIO IDE in Visual Studio Code.
 
 # Legal
 This project is released under the BSD v2 License.
