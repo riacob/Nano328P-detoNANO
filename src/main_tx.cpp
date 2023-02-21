@@ -22,7 +22,7 @@
 #include "debounce.h"
 #include "screenstates.h"
 
-// RF24 
+// RF24
 RF24 radio(PIN_RF24_CE, PIN_RF24_CSN);
 // SSD1306
 SSD1306AsciiAvrI2c oled;
@@ -41,6 +41,8 @@ int screenIdx = 0;
 // Wether or not the device is unlocked
 uint8_t isUnlocked = 0;
 
+void abortISR();
+
 void setup()
 {
     // Initialize GPIOs
@@ -57,17 +59,18 @@ void setup()
     pinMode(PIN_RF24_CSN, OUTPUT);
     pinMode(PIN_ARM, INPUT);
     pinMode(PIN_DETONATE, INPUT);
+    digitalWrite(PIN_BUZZER, LOW);
 
-    // Read saved config from EEPROM
-    readConfig(&masterConfig);
+    // Initialize interrupts
+    attachInterrupt(digitalPinToInterrupt(PIN_BTN_ABORT), &abortISR, FALLING);
+
+    // TODO Read saved config from EEPROM
     setDefaultMasterConfig(&masterConfig);
-    // setDefaultSlaveConfig(&slaveConfig);
-    // writeConfig(&masterConfig);
 
     // Initialize RF24
     radio.begin();
     radio.setChannel(masterConfig.radioChannel);
-    radio.setPALevel(RF24_PA_LEVEL);
+    radio.setPALevel(RF24_PA_MIN);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
     radio.openWritingPipe(masterConfig.targetID);
     radio.openReadingPipe(1, masterConfig.ownID);
@@ -93,14 +96,12 @@ void setup()
     Serial.println("**************** EEPROM ****************");
     printEEPROM();
     Serial.println("**************** DEBUG ****************");
-    transmitConfigToSlave(&slaveConfig, &radio);
-    uint8_t rbfr[32] = {'C', '{', '"', 'r', 'c', '"', ':', '7', '6', '}'};
-    receiveConfigFromMaster(&slaveConfig, rbfr);
 #endif
 }
 
 void loop()
 {
+    /*
     if (btnCenter.isPressed())
     {
         if (screenIdx > STATE_COUNT_USER)
@@ -109,5 +110,26 @@ void loop()
         }
         screenIdx++;
         switchScreenState(&oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &masterConfig, &slaveConfig);
+    }
+    */
+    uint8_t detbuf[1] = {10};
+    if (digitalRead(PIN_DETONATE))
+    {
+
+        radio.write(detbuf, 1);
+        Serial.println("detonation packet sent");
+    }
+}
+
+void abortISR()
+{
+    oled.setFont(TimesNewRoman16_bold);
+    oled.clear();
+    oled.println("ABORTED");
+    oled.println("");
+    oled.println("REBOOT");
+    oled.println("DEVICE");
+    while (1)
+    {
     }
 }
