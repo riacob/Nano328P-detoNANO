@@ -67,7 +67,7 @@ void setup()
 
     // Initialize RF24
     radio.begin();
-    radio.maskIRQ(true,true,false);
+    radio.maskIRQ(true, true, false);
     radio.setAutoAck(true);
     radio.setChannel(slaveConfig.radioChannel);
     radio.setPALevel(RF24_PA_MIN);
@@ -79,12 +79,7 @@ void setup()
     // Initialize SSD1306
     oled.begin(&Adafruit128x64, I2C_OLED_ADDRESS);
     delay(100);
-    oled.setFont(TimesNewRoman16_bold);
-    oled.clear();
-    oled.println("detoNANO");
-    oled.println("Welcome!");
-    oled.println(isUnlocked ? "Unlocked" : "Locked");
-    oled.println("Press OK");
+    switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &slaveConfig);
 
 #if DEBUG == true
     Serial.begin(BAUDRATE);
@@ -111,10 +106,6 @@ void loop()
     }*/
     if (btnCenter.isPressed())
     {
-        if (screenIdx > STATE_COUNT_USER)
-        {
-            screenIdx = 0;
-        }
         screenIdx++;
         switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &slaveConfig);
     }
@@ -170,12 +161,14 @@ void abortISR()
 
 void radioISR()
 {
-    if (!isUnlocked) {
+    if (!isUnlocked)
+    {
         return;
     }
     bool tx_ok, tx_fail, rx_ready;
     radio.whatHappened(tx_ok, tx_fail, rx_ready);
-    if (radio.available()) {
+    if (radio.available())
+    {
         radio.read(&dataReceived, 32);
     }
     digitalWrite(PIN_LED_B, HIGH);

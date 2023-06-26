@@ -3,7 +3,8 @@
 void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedButton *btnCenter, DebouncedButton *btnRight, DebouncedButton *btnLeft, uint8_t *isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
 {
     // If screenIdx has a value that doesn't exist in the SCREEN_STATE enum, set it to zero
-    if ((isSystemScreen && (*screenIdx == STATE_COUNT_TOT-1)) || (!isSystemScreen && (*screenIdx == STATE_COUNT_USER-1))) {
+    if ((isSystemScreen && (*screenIdx == STATE_COUNT_TOT)) || (!isSystemScreen && (*screenIdx == STATE_COUNT_USER)))
+    {
         *screenIdx = STATE_USR_PRINT_HOME_SCREEN;
     }
     // If pin is not enabled, unlock device
@@ -12,7 +13,7 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
         *isUnlocked = 1;
     }
     // If pin is enabled, ask for pin
-    if ((config->pinEnabled && (*screenIdx > 0)) && !*isUnlocked)
+    if ((config->pinEnabled && (*screenIdx > 0)) && !(*isUnlocked))
     {
         // Number of times the OK button has been pressed
         // When it was pressed 4 times, all digits were entered, check pin
@@ -225,11 +226,11 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
     // Print home screen
     case STATE_USR_PRINT_HOME_SCREEN:
     {
-        oled->setFont(TimesNewRoman16_bold);
+        oled->setFont(font5x7);
         oled->clear();
         oled->println("detoNANO");
         oled->println("Welcome!");
-        oled->println(isUnlocked ? "Unlocked" : "Locked");
+        oled->println(*isUnlocked ? "Unlocked" : "Locked");
         oled->println("Press OK");
         break;
     }
@@ -379,6 +380,9 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
                 {
                     config->radioChannel = 0;
                 }
+                // Second byte of the ID is always the radio channel
+                config->ownID[1] = config->radioChannel;
+                config->targetID[1] = config->radioChannel;
                 oled->clearField(0, 3, 20);
                 oled->print(config->radioChannel);
             }
@@ -389,14 +393,17 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
                 {
                     config->radioChannel = 0;
                 }
+                // Second byte of the ID is always the radio channel
+                config->ownID[1] = config->radioChannel;
+                config->targetID[1] = config->radioChannel;
                 oled->clearField(0, 3, 20);
                 oled->print(config->radioChannel);
             }
             okPressed = btnCenter->isPressed();
         }
-        break;    }
+        break;
+    }
         // RECEIVER ONLY SETTINGS
         // SYSTEM SCREENS
-
     }
 }

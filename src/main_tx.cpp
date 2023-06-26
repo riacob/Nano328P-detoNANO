@@ -78,12 +78,7 @@ void setup()
     // Initialize SSD1306
     oled.begin(&Adafruit128x64, I2C_OLED_ADDRESS);
     delay(100);
-    oled.setFont(TimesNewRoman16_bold);
-    oled.clear();
-    oled.println("detoNANO");
-    oled.println("Welcome!");
-    oled.println(isUnlocked ? "Locked" : "Unlocked");
-    oled.println("Press OK");
+    switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &masterConfig, &slaveConfig);
 
 #if DEBUG == true
     Serial.begin(BAUDRATE);
@@ -105,10 +100,6 @@ void loop()
 
     if (btnCenter.isPressed())
     {
-        if (screenIdx > STATE_COUNT_USER)
-        {
-            screenIdx = 0;
-        }
         screenIdx++;
         switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &masterConfig, &slaveConfig);
     }
