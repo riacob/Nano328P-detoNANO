@@ -19,17 +19,25 @@
 
 #include "hardware.h"
 #include "userconfig.h"
+#include "screenstates.h"
+#include "debounce.h"
 userconfig_s slaveConfig;
 
 RF24 radio(PIN_RF24_CE, PIN_RF24_CSN);
 SSD1306AsciiAvrI2c oled;
+DebouncedButton btnCenter;
+DebouncedButton btnLeft;
+DebouncedButton btnRight;
 
-char dataReceived[32];
+volatile char dataReceived[32];
 bool newData = false;
+int screenIdx = 0;
+uint8_t isUnlocked = 0;
 
 void getData();
 void showData();
 void abortISR();
+void radioISR();
 
 void setup()
 {
@@ -39,9 +47,9 @@ void setup()
     pinMode(PIN_LED_B, OUTPUT);
     pinMode(PIN_BUZZER, OUTPUT);
     pinMode(PIN_BTN_ABORT, INPUT_PULLUP);
-    pinMode(PIN_BTN_CENTER, INPUT_PULLUP);
-    pinMode(PIN_BTN_RIGHT, INPUT_PULLUP);
-    pinMode(PIN_BTN_LEFT, INPUT_PULLUP);
+    btnCenter.begin(PIN_BTN_CENTER);
+    btnLeft.begin(PIN_BTN_LEFT);
+    btnRight.begin(PIN_BTN_RIGHT);
     pinMode(PIN_RF24_IRQ, INPUT);
     pinMode(PIN_RF24_CE, OUTPUT);
     pinMode(PIN_RF24_CSN, OUTPUT);
@@ -52,12 +60,15 @@ void setup()
 
     // Initialize interrupts
     attachInterrupt(digitalPinToInterrupt(PIN_BTN_ABORT), &abortISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_RF24_IRQ), &radioISR, FALLING);
 
     // TODO Read saved config from EEPROM
     setDefaultSlaveConfig(&slaveConfig);
 
     // Initialize RF24
     radio.begin();
+    radio.maskIRQ(true,true,false);
+    radio.setAutoAck(true);
     radio.setChannel(slaveConfig.radioChannel);
     radio.setPALevel(RF24_PA_MIN);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
@@ -72,7 +83,7 @@ void setup()
     oled.clear();
     oled.println("detoNANO");
     oled.println("Welcome!");
-    oled.println();
+    oled.println(isUnlocked ? "Unlocked" : "Locked");
     oled.println("Press OK");
 
 #if DEBUG == true
@@ -80,6 +91,8 @@ void setup()
     printf_begin();
     Serial.println("**************** RF24 ****************");
     radio.printPrettyDetails();
+    Serial.print("Is RF24 module connected?: ");
+    Serial.println(radio.isChipConnected() ? "yes" : "no");
     Serial.println("**************** CONFIG ****************");
     printConfig(&slaveConfig);
     Serial.println("**************** EEPROM ****************");
@@ -90,11 +103,24 @@ void setup()
 
 void loop()
 {
-    getData();
-    showData();
+    // Try to use interrupts instead
+    /*if (isUnlocked)
+    {
+        getData();
+        showData();
+    }*/
+    if (btnCenter.isPressed())
+    {
+        if (screenIdx > STATE_COUNT_USER)
+        {
+            screenIdx = 0;
+        }
+        screenIdx++;
+        switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &slaveConfig);
+    }
 }
 
-void getData()
+/*void getData()
 {
     if (radio.available())
     {
@@ -107,7 +133,7 @@ void showData()
 {
     if (newData == true)
     {
-        Serial.print("Data received ");
+        Serial.println("Data received");
         for (int i = 0; i < 32; i++)
         {
             Serial.print((int)dataReceived[i]);
@@ -122,12 +148,12 @@ void showData()
         if (dataReceived[0] == 10)
         {
             digitalWrite(PIN_RELAY, HIGH);
-            delay(250);
+            delay(slaveConfig.detonationPulseTime);
             digitalWrite(PIN_RELAY, LOW);
         }
         newData = false;
     }
-}
+}*/
 
 void abortISR()
 {
@@ -140,4 +166,17 @@ void abortISR()
     while (1)
     {
     }
+}
+
+void radioISR()
+{
+    if (!isUnlocked) {
+        return;
+    }
+    bool tx_ok, tx_fail, rx_ready;
+    radio.whatHappened(tx_ok, tx_fail, rx_ready);
+    if (radio.available()) {
+        radio.read(&dataReceived, 32);
+    }
+    digitalWrite(PIN_LED_B, HIGH);
 }

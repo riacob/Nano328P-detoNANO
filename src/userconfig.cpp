@@ -34,6 +34,8 @@ void setDefaultMasterConfig(userconfig_s *config)
     config->pin[1] = 0;
     config->pin[2] = 0;
     config->pin[3] = 0;
+
+    config->detonationPulseTime = 50;
 }
 
 void setDefaultSlaveConfig(userconfig_s *config)
@@ -60,10 +62,13 @@ void setDefaultSlaveConfig(userconfig_s *config)
     config->pin[1] = 0;
     config->pin[2] = 0;
     config->pin[3] = 0;
+
+    config->detonationPulseTime = 50;
 }
 
 void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
 {
+    // ? is inserting a delay between each packet beneficial?
     // Convert config to a series of packets to be sent to the slave, containing data in JSON format
     // Each with the same command, but different contents
     // CMD_BYTE{json}
@@ -74,6 +79,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     uint8_t buf[32] = {0};
     // Iterator variable
     int i;
+    // Acknowledge bit
+    bool ack = false;
+    // Number of times the master tried unsuccessfully to send the config to the slave
+    // Declared as static because it should remain the same troughout all the times the function is recursively called
+    // And be automatically reset to zero at the end of the function (if there are no issues)
+    static int tries = 0;
+    const int maxtries = 5;
 
     // radioChannel
     json["rc"] = config->radioChannel;
@@ -86,7 +98,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
 
     // targetID
     json["tid"][0] = config->targetID[0];
@@ -103,7 +121,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
 
     // ownID
     json["oid"][0] = config->ownID[0];
@@ -120,7 +144,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
 
     // detonationDelay
     json["dd"] = config->detonationDelay;
@@ -133,7 +163,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
 
     // pinEnabled
     json["pe"] = config->pinEnabled;
@@ -146,7 +182,13 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
 
     // pin
     json["pin"][0] = config->pin[0];
@@ -162,7 +204,43 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
     }
     // Insert cmd at buf[0]
     buf[0] = 'C';
-    radio->write(buf, 32);
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
+
+    // detonationPulseTime
+    json["dpt"] = config->detonationPulseTime;
+    serializeJson(json, buf);
+    json.clear();
+    // Shift buf[] by 1
+    for (i = 31; i > 0; i--)
+    {
+        buf[i] = buf[i - 1];
+    }
+    // Insert cmd at buf[0]
+    buf[0] = 'C';
+    // Try to write to radio
+    ack = radio->write(buf, 32);
+    if (!ack && tries < maxtries)
+    {
+        transmitConfigToSlave(config, radio);
+        tries++;
+    }
+
+    if (tries >= maxtries)
+    {
+        Serial.println("config not written");
+        tries = 0;
+    }
+    else
+    {
+        Serial.println("successfully written config");
+        tries = 0;
+    }
 }
 
 int receiveConfigFromMaster(userconfig_s *config, uint8_t *dataBuffer)
@@ -257,6 +335,12 @@ int receiveConfigFromMaster(userconfig_s *config, uint8_t *dataBuffer)
         config->pin[3] = json["pin"][3];
         return -1;
     }
+    // detonationPulseTime
+    else if (json.containsKey("dpt"))
+    {
+        config->detonationPulseTime = json["dpt"];
+        return -1;
+    }
     // If there are no valid keys, we might have a parsing error
     else
     {
@@ -309,7 +393,7 @@ void printConfig(userconfig_s *config)
     Serial.print("detonationDelay: ");
     Serial.println(config->detonationDelay);
     Serial.print("pinEnabled: ");
-    Serial.println(config->pinEnabled);
+    Serial.println(config->pinEnabled ? "yes" : "no");
     Serial.print("pin: ");
     for (i = 0; i < 4; i++)
     {
@@ -317,14 +401,13 @@ void printConfig(userconfig_s *config)
         Serial.print(" ");
     }
     Serial.println();
+    Serial.print("detonationPulseTime: ");
+    Serial.print(config->detonationPulseTime);
+    Serial.println();
 }
 
 void writeConfig(userconfig_s *config)
 {
-    // The first byte of the ID will always be the device role, S (slave) or M (master)
-    // The second byte of the ID will always be the radio channel
-    config->targetID[1] = config->radioChannel;
-    config->ownID[1] = config->radioChannel;
     // Write the struct to the EEPROM
     EEPROM.put(0, *config);
 }

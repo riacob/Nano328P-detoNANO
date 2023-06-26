@@ -31,6 +31,8 @@ typedef struct
     uint8_t pinEnabled;
     // JSON key: pin
     uint8_t pin[4];
+    // JSON key: dpt
+    uint32_t detonationPulseTime;
 } userconfig_s;
 
 /**

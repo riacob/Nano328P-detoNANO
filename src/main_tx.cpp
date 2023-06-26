@@ -34,12 +34,10 @@ DebouncedButton btnRight;
 userconfig_s masterConfig;
 userconfig_s slaveConfig;
 
-// The data buffer to be sent trough radio
-uint8_t packetBuffer[32] = "Hello from nRF24!";
 // The number of times the center button has been pressed
 int screenIdx = 0;
 // Wether or not the device is unlocked
-uint8_t isUnlocked = 0;
+uint8_t isUnlocked = false;
 
 void abortISR();
 
@@ -69,8 +67,9 @@ void setup()
 
     // Initialize RF24
     radio.begin();
+    radio.setAutoAck(true);
     radio.setChannel(masterConfig.radioChannel);
-    radio.setPALevel(RF24_PA_MIN);
+    radio.setPALevel(RF24_PA_MAX);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
     radio.openWritingPipe(masterConfig.targetID);
     radio.openReadingPipe(1, masterConfig.ownID);
@@ -83,7 +82,7 @@ void setup()
     oled.clear();
     oled.println("detoNANO");
     oled.println("Welcome!");
-    oled.println();
+    oled.println(isUnlocked ? "Locked" : "Unlocked");
     oled.println("Press OK");
 
 #if DEBUG == true
@@ -91,6 +90,8 @@ void setup()
     printf_begin();
     Serial.println("**************** RF24 ****************");
     radio.printPrettyDetails();
+    Serial.print("Is RF24 module connected?: ");
+    Serial.println(radio.isChipConnected() ? "yes" : "no");
     Serial.println("**************** CONFIG ****************");
     printConfig(&masterConfig);
     Serial.println("**************** EEPROM ****************");
@@ -101,7 +102,7 @@ void setup()
 
 void loop()
 {
-    /*
+
     if (btnCenter.isPressed())
     {
         if (screenIdx > STATE_COUNT_USER)
@@ -109,15 +110,25 @@ void loop()
             screenIdx = 0;
         }
         screenIdx++;
-        switchScreenState(&oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &masterConfig, &slaveConfig);
+        switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &masterConfig, &slaveConfig);
     }
-    */
-    uint8_t detbuf[1] = {10};
-    if (digitalRead(PIN_DETONATE))
-    {
 
-        radio.write(detbuf, 1);
-        Serial.println("detonation packet sent");
+    if (isUnlocked)
+    {
+        uint8_t detbuf[1] = {10};
+        if (digitalRead(PIN_DETONATE))
+        {
+            bool ack = radio.write(detbuf, 1);
+            Serial.println("detonation packet sent");
+            if (ack)
+            {
+                Serial.println("ack received");
+            }
+            else
+            {
+                Serial.println("ack not received");
+            }
+        }
     }
 }
 

@@ -1,20 +1,19 @@
 #include "screenstates.h"
 
-void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, DebouncedButton* btnRight, DebouncedButton* btnLeft, uint8_t* isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
+void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedButton *btnCenter, DebouncedButton *btnRight, DebouncedButton *btnLeft, uint8_t *isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
 {
     // If screenIdx has a value that doesn't exist in the SCREEN_STATE enum, set it to zero
-    if (*screenIdx > STATE_COUNT_AUTO)
-    {
-        *screenIdx = STATE_PRINT_HOME_SCREEN;
+    if ((isSystemScreen && (*screenIdx == STATE_COUNT_TOT-1)) || (!isSystemScreen && (*screenIdx == STATE_COUNT_USER-1))) {
+        *screenIdx = STATE_USR_PRINT_HOME_SCREEN;
     }
     // If pin is not enabled, unlock device
-    if (!config->pinEnabled) {
+    if (!config->pinEnabled)
+    {
         *isUnlocked = 1;
     }
     // If pin is enabled, ask for pin
     if ((config->pinEnabled && (*screenIdx > 0)) && !*isUnlocked)
     {
-        Serial.println("pin enabled");
         // Number of times the OK button has been pressed
         // When it was pressed 4 times, all digits were entered, check pin
         uint8_t okPresses = 0;
@@ -202,7 +201,7 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
             if (pin[i] != config->pin[i])
             {
                 *isUnlocked = 0;
-                *screenIdx = STATE_PRINT_HOME_SCREEN;
+                *screenIdx = STATE_USR_PRINT_HOME_SCREEN;
                 // OLED contenents have changed, so update it
                 oled->setFont(font5x7);
                 oled->clear();
@@ -219,23 +218,23 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
         }
         // If pin is correct, continue
         *isUnlocked = 1;
-        *screenIdx = STATE_PRINT_HOME_SCREEN;
+        *screenIdx = STATE_USR_PRINT_HOME_SCREEN;
     }
     switch (*screenIdx)
     {
     // Print home screen
-    case STATE_PRINT_HOME_SCREEN:
+    case STATE_USR_PRINT_HOME_SCREEN:
     {
-        oled->setFont(font5x7);
+        oled->setFont(TimesNewRoman16_bold);
         oled->clear();
         oled->println("detoNANO");
-        oled->println();
-        oled->println();
+        oled->println("Welcome!");
+        oled->println(isUnlocked ? "Unlocked" : "Locked");
         oled->println("Press OK");
         break;
     }
     // Print button tutorial
-    case STATE_PRINT_TUTORIAL:
+    case STATE_USR_PRINT_TUTORIAL:
     {
         oled->setFont(font5x7);
         oled->clear();
@@ -246,15 +245,18 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
         break;
     }
     // Print device configuration
-    case STATE_PRINT_DEVICE_CONFIGURATION:
+    case STATE_USR_PRINT_DEVICE_CONFIGURATION_1:
     {
         oled->setFont(font5x7);
         oled->clear();
-        oled->println("CONFIGURATION");
+        oled->println("CONFIG PAGE 1/1");
         oled->print("Role: ");
-        if (config->ownID[0] == 'M') {
+        if (config->ownID[0] == 'M')
+        {
             oled->println("TRANSMITTER");
-        } else {
+        }
+        else
+        {
             oled->println("RECEIVER");
         }
         oled->print("Channel: ");
@@ -275,16 +277,18 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
         oled->println();
         oled->print("detDelay: ");
         oled->println(config->detonationDelay);
+        oled->print("detPulseTime: ");
+        oled->println(config->detonationPulseTime);
         break;
     }
     // COMMON SETTINGS
     // Edit detonation delay
-    case STATE_EDIT_COMMON_DETONATIONDELAY:
+    case STATE_USR_EDIT_COMMON_DETONATIONDELAY:
     {
         uint8_t okPressed = 0;
         oled->setFont(font5x7);
         oled->clear();
-        oled->println("Set detonationDelay");
+        oled->println("Set detDelay");
         oled->print("Current value: ");
         oled->println(config->detonationDelay);
         oled->println("Press OK to save");
@@ -292,23 +296,59 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
         {
             if (btnRight->isPressed())
             {
-                if (config->detonationDelay == UINT32_MAX)
+                config->detonationDelay += 5000;
+                if (config->detonationDelay > 3600000)
                 {
                     config->detonationDelay = 0;
                 }
-                config->detonationDelay += 5000;
-                oled->clearField(0, 20, 5);
+                oled->clearField(0, 3, 20);
                 oled->print(config->detonationDelay);
             }
             if (btnLeft->isPressed())
             {
-                if (config->detonationDelay <= 0)
+                config->detonationDelay -= 5000;
+                if (config->detonationDelay > 3600000)
                 {
                     config->detonationDelay = 0;
                 }
-                config->detonationDelay -= 5000;
-                oled->clearField(0, 20, 5);
+                oled->clearField(0, 3, 20);
                 oled->print(config->detonationDelay);
+            }
+            okPressed = btnCenter->isPressed();
+        }
+        break;
+    }
+    // Edit detonation pulse time
+    case STATE_USR_EDIT_COMMON_DETONATIONPULSETIME:
+    {
+        uint8_t okPressed = 0;
+        oled->setFont(font5x7);
+        oled->clear();
+        oled->println("Set detPulseTime");
+        oled->print("Current value: ");
+        oled->println(config->detonationPulseTime);
+        oled->println("Press OK to save");
+        while (!okPressed)
+        {
+            if (btnRight->isPressed())
+            {
+                config->detonationPulseTime += 50;
+                if (config->detonationPulseTime > 3600000)
+                {
+                    config->detonationPulseTime = 0;
+                }
+                oled->clearField(0, 3, 20);
+                oled->print(config->detonationPulseTime);
+            }
+            if (btnLeft->isPressed())
+            {
+                config->detonationPulseTime -= 50;
+                if (config->detonationPulseTime > 3600000)
+                {
+                    config->detonationPulseTime = 0;
+                }
+                oled->clearField(0, 3, 20);
+                oled->print(config->detonationPulseTime);
             }
             okPressed = btnCenter->isPressed();
         }
@@ -316,10 +356,11 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
     }
     // TRANSMITTER ONLY SETTINGS
     // Edit tx radio channel
-    case STATE_EDIT_TX_RADIOCHANNEL:
+    case STATE_USR_EDIT_TX_RADIOCHANNEL:
     {
         // If the current device is not a transmitter, move on
-        if (config->ownID[0] != 'M') {
+        if (config->ownID[0] != 'M')
+        {
             break;
         }
         uint8_t okPressed = 0;
@@ -333,28 +374,29 @@ void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, Deb
         {
             if (btnRight->isPressed())
             {
-                if (config->radioChannel == 126)
+                config->radioChannel++;
+                if (config->radioChannel > 127)
                 {
                     config->radioChannel = 0;
                 }
-                config->radioChannel++;
-                oled->clearField(0, 20, 5);
+                oled->clearField(0, 3, 20);
                 oled->print(config->radioChannel);
             }
             if (btnLeft->isPressed())
             {
-                if (config->radioChannel <= 0)
+                config->radioChannel--;
+                if (config->radioChannel > 127)
                 {
                     config->radioChannel = 0;
                 }
-                config->radioChannel--;
-                oled->clearField(0, 20, 5);
+                oled->clearField(0, 3, 20);
                 oled->print(config->radioChannel);
             }
             okPressed = btnCenter->isPressed();
         }
-        break;
-    }
+        break;    }
         // RECEIVER ONLY SETTINGS
+        // SYSTEM SCREENS
+
     }
 }

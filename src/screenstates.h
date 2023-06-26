@@ -18,21 +18,24 @@ enum SCREEN_STATES
 {
     // States accessible by the user
     // For example home screen, setting screen...
-    STATE_PRINT_HOME_SCREEN,
-    STATE_PRINT_TUTORIAL,
-    STATE_PRINT_DEVICE_CONFIGURATION,
-    STATE_EDIT_COMMON_DETONATIONDELAY,
-    STATE_EDIT_TX_RADIOCHANNEL,
+    STATE_USR_PRINT_HOME_SCREEN,
+    STATE_USR_PRINT_TUTORIAL,
+    STATE_USR_PRINT_DEVICE_CONFIGURATION_1,
+    STATE_USR_EDIT_COMMON_DETONATIONDELAY,
+    STATE_USR_EDIT_TX_RADIOCHANNEL,
+    STATE_USR_EDIT_COMMON_DETONATIONPULSETIME,
+    // Total number of user-accessible states
     STATE_COUNT_USER,
-
     // States only accessible by the system
     // All status messages, for example "detonating in xxx mS"
-    STATE_COUNT_AUTO
+    // Total number of user-accessible and system-accessible states, system-accessible states = STATE_COUNT_TOT - STATE_COUNT_USER
+    STATE_COUNT_TOT
 };
 
 /**
  * @brief Switches between screen states, refer to enum SCREEN_STATES
  * 
+ * @param isSystemState: Whether the screen that needs to be set is a system screen or a user screen
  * @param btnCenter: The pointer to the "debounced center button" object
  * @param btnRight: The pointer to the "debounced right button" object
  * @param btnLeft: The pointer to the "debounced left button" object
@@ -42,6 +45,6 @@ enum SCREEN_STATES
  * @param config: The pointer of the current device's config
  * @param slaveConfig: The pointer of the slave's config, ONLY USED WHEN CALLING THIS FUNCTION FROM A MASTER, is nullptr by default
  */
-void switchScreenState(SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, DebouncedButton* btnRight, DebouncedButton* btnLeft, uint8_t* isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig = nullptr);
+void switchScreenState(bool isSystemState, SSD1306AsciiAvrI2c* oled, DebouncedButton* btnCenter, DebouncedButton* btnRight, DebouncedButton* btnLeft, uint8_t* isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig = nullptr);
 
 #endif
