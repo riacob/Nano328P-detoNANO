@@ -7,7 +7,7 @@ Two communicating devices* (transmitter/receiver or master/slave), once correctl
 <br>
 After the user arms both devices, and steps away from the receiver to a safe distance, the user can arm the device and press both detonation buttons and wait, if set, for the timer to expire, and thus for the detonation to happen.
 <br>
-*An unbalanced mode with a master and multiple slaves is possible.
+*An unbalanced mode with a master and multiple slaves is not possible because the slaves would all respond with an ACK on the same channel.
 <br>
 **The purpose of this packet is to ensure that the devices are always able to communicate. Lack of communication for a defined interval of time means that the devices will enter a safety-lock mode, in which they will need to be rebooted to work again.
 <br>
@@ -22,6 +22,8 @@ Note: the key switch has been bypassed by a jumper link, since this model will b
 The safety layer the key was meant to add is replaced by the ability to unplug the external power, which is impossible in the enclosed "Pro" and "Ultimate" models.
 <br>
 The devices, as stated in the documentation, can be PIN-protected either way, thus ensuring safety of operation.
+<br>
+A 3.3V LDO needed to be added for the high power consumption of the modules (115mA max).
 
 # Software
 Perhaps the most "boring" part of this project. As always, it's just lines of code, organized and commented in such a way that code is easy to read, debug, mantain and update, while also mantaining modularity. It might look a little bloated, but that's just how it is for big complex projects with modularity and ease of human-readability in mind.
