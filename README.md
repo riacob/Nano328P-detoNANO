@@ -7,7 +7,7 @@ Two communicating devices* (transmitter/receiver or master/slave), once correctl
 <br>
 After the user arms both devices, and steps away from the receiver to a safe distance, the user can arm the device and press both detonation buttons and wait, if set, for the timer to expire, and thus for the detonation to happen.
 <br>
-*An unbalanced mode with a master and multiple slaves is possible.
+*An unbalanced mode with a master and multiple slaves is not possible because the slaves would all respond with an ACK on the same channel.
 <br>
 **The purpose of this packet is to ensure that the devices are always able to communicate. Lack of communication for a defined interval of time means that the devices will enter a safety-lock mode, in which they will need to be rebooted to work again.
 <br>
