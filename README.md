@@ -22,6 +22,8 @@ Note: the key switch has been bypassed by a jumper link, since this model will b
 The safety layer the key was meant to add is replaced by the ability to unplug the external power, which is impossible in the enclosed "Pro" and "Ultimate" models.
 <br>
 The devices, as stated in the documentation, can be PIN-protected either way, thus ensuring safety of operation.
+<br>
+A 3.3V LDO needed to be added for the high power consumption of the modules (115mA max).
 
 # Software
 Perhaps the most "boring" part of this project. As always, it's just lines of code, organized and commented in such a way that code is easy to read, debug, mantain and update, while also mantaining modularity. It might look a little bloated, but that's just how it is for big complex projects with modularity and ease of human-readability in mind.
