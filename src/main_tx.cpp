@@ -65,6 +65,7 @@ void setup()
 
     // TODO Read saved config from EEPROM
     setDefaultMasterConfig(&masterConfig);
+    setDefaultSlaveConfig(&slaveConfig);
 
     // Initialize RF24
     radiook = radio.begin();
@@ -117,20 +118,13 @@ void loop()
 
     if (isUnlocked)
     {
-        uint8_t detbuf[1] = {10};
+        uint8_t detbuf[1] = {CMD_DETONATE};
+        uint8_t abbuf[1] = {CMD_ABORT};
         if (digitalRead(PIN_DETONATE))
         {
-            bool ack = radio.write(detbuf, 1);
-            Serial.println("detonation packet sent");
-            if (ack)
-            {
-                Serial.println("ack received");
-            }
-            else
-            {
-                Serial.println("ack not received");
-            }
-            delay(5000);
+            radio.write(detbuf, 1); // write detonate command
+            delay(2000); // wait 2 seconds
+            radio.write(abbuf, 1); // write abort command
         }
     }
 }
