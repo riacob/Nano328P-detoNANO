@@ -28,6 +28,7 @@ enum SCREEN_STATES
     STATE_COUNT_USER,
     // States only accessible by the system
     // All status messages, for example "detonating in xxx mS"
+    STATE_SYS_RADIO_ERR_MISSING,
     // Total number of user-accessible and system-accessible states, system-accessible states = STATE_COUNT_TOT - STATE_COUNT_USER
     STATE_COUNT_TOT
 };

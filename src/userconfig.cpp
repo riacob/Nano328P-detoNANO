@@ -9,6 +9,7 @@
  *
  */
 #include "userconfig.h"
+#include "hardware.h"
 
 void setDefaultMasterConfig(userconfig_s *config)
 {
@@ -35,7 +36,7 @@ void setDefaultMasterConfig(userconfig_s *config)
     config->pin[2] = 0;
     config->pin[3] = 0;
 
-    config->detonationPulseTime = 50;
+    config->detonationPulseTime = 500;
 }
 
 void setDefaultSlaveConfig(userconfig_s *config)
@@ -63,7 +64,7 @@ void setDefaultSlaveConfig(userconfig_s *config)
     config->pin[2] = 0;
     config->pin[3] = 0;
 
-    config->detonationPulseTime = 50;
+    config->detonationPulseTime = 500;
 }
 
 void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
@@ -97,7 +98,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -120,7 +121,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -143,7 +144,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -162,7 +163,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -181,7 +182,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -203,7 +204,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)
@@ -222,7 +223,7 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
         buf[i] = buf[i - 1];
     }
     // Insert cmd at buf[0]
-    buf[0] = 'C';
+    buf[0] = CMD_CONFIG;
     // Try to write to radio
     ack = radio->write(buf, 32);
     if (!ack && tries < maxtries)

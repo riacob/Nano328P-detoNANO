@@ -43,6 +43,7 @@ void abortISR();
 
 void setup()
 {
+    bool radiook = false;
     // Initialize GPIOs
     pinMode(PIN_LED_R, OUTPUT);
     pinMode(PIN_LED_G, OUTPUT);
@@ -66,10 +67,11 @@ void setup()
     setDefaultMasterConfig(&masterConfig);
 
     // Initialize RF24
-    radio.begin();
+    radiook = radio.begin();
     radio.setAutoAck(true);
     radio.setChannel(masterConfig.radioChannel);
-    radio.setPALevel(RF24_PA_MAX);
+    radio.setPALevel(RF24_PA_LEVEL);
+    radio.setDataRate(RF24_DATARATE);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
     radio.openWritingPipe(masterConfig.targetID);
     radio.openReadingPipe(1, masterConfig.ownID);
@@ -93,6 +95,15 @@ void setup()
     printEEPROM();
     Serial.println("**************** DEBUG ****************");
 #endif
+
+    // Make sure RF24 is okay
+    if (!radiook)
+    {
+        Serial.println("ERROR RADIO MODULE IS MISSING");
+        while (1)
+        {
+        }
+    }
 }
 
 void loop()
@@ -119,6 +130,7 @@ void loop()
             {
                 Serial.println("ack not received");
             }
+            delay(5000);
         }
     }
 }

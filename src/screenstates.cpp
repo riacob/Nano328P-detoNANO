@@ -3,7 +3,7 @@
 void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedButton *btnCenter, DebouncedButton *btnRight, DebouncedButton *btnLeft, uint8_t *isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
 {
     // If screenIdx has a value that doesn't exist in the SCREEN_STATE enum, set it to zero
-    if ((isSystemScreen && (*screenIdx == STATE_COUNT_TOT)) || (!isSystemScreen && (*screenIdx == STATE_COUNT_USER)))
+    if ((isSystemScreen && (*screenIdx >= STATE_COUNT_TOT)) || (!isSystemScreen && (*screenIdx >= STATE_COUNT_USER)))
     {
         *screenIdx = STATE_USR_PRINT_HOME_SCREEN;
     }
@@ -405,5 +405,13 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
     }
         // RECEIVER ONLY SETTINGS
         // SYSTEM SCREENS
+    case STATE_SYS_RADIO_ERR_MISSING:
+    {
+        oled->setFont(font5x7);
+        oled->clear();
+        oled->println("Radio ERROR");
+        oled->println("Faulty module");
+        break;
+    }
     }
 }

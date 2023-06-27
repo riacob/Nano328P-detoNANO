@@ -35,8 +35,14 @@
 #define I2C_OLED_ADDRESS 0x3C
 #define BAUDRATE 115200
 #define RF24_PA_LEVEL RF24_PA_HIGH
-#define RF24_RETRIES_COUNT 3
-#define RF24_RETRIES_DELAY 5
+#define RF24_DATARATE RF24_250KBPS
+#define RF24_RETRIES_COUNT 15
+#define RF24_RETRIES_DELAY 15
 #define DEBUG true
+
+// Commands in packets
+#define CMD_DETONATE 'D'
+#define CMD_CONFIG 'C'
+#define CMD_ABORT 'A'
 
 #endif

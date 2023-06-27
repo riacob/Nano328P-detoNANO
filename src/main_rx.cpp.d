@@ -29,18 +29,18 @@ DebouncedButton btnCenter;
 DebouncedButton btnLeft;
 DebouncedButton btnRight;
 
-volatile char dataReceived[32];
+uint8_t dataBuffer[32];
 bool newData = false;
 int screenIdx = 0;
 uint8_t isUnlocked = 0;
 
-void getData();
-void showData();
+void handlePackets();
 void abortISR();
 void radioISR();
 
 void setup()
 {
+    bool radiook = false;
     // Initialize GPIOs
     pinMode(PIN_LED_R, OUTPUT);
     pinMode(PIN_LED_G, OUTPUT);
@@ -66,11 +66,12 @@ void setup()
     setDefaultSlaveConfig(&slaveConfig);
 
     // Initialize RF24
-    radio.begin();
+    radiook = radio.begin();
     radio.maskIRQ(true, true, false);
     radio.setAutoAck(true);
     radio.setChannel(slaveConfig.radioChannel);
-    radio.setPALevel(RF24_PA_MIN);
+    radio.setPALevel(RF24_PA_LEVEL);
+    radio.setDataRate(RF24_DATARATE);
     radio.setRetries(RF24_RETRIES_DELAY, RF24_RETRIES_COUNT);
     radio.openWritingPipe(slaveConfig.targetID);
     radio.openReadingPipe(1, slaveConfig.ownID);
@@ -94,16 +95,20 @@ void setup()
     printEEPROM();
     Serial.println("**************** DEBUG ****************");
 #endif
+
+    // Make sure RF24 is okay
+    if (!radiook)
+    {
+        Serial.println("ERROR RADIO MODULE IS MISSING");
+        while (1)
+        {
+        }
+    }
 }
 
 void loop()
 {
-    // Try to use interrupts instead
-    /*if (isUnlocked)
-    {
-        getData();
-        showData();
-    }*/
+    handlePackets();
     if (btnCenter.isPressed())
     {
         screenIdx++;
@@ -111,40 +116,36 @@ void loop()
     }
 }
 
-/*void getData()
+void handlePackets()
 {
-    if (radio.available())
+    if (!newData)
     {
-        radio.read(&dataReceived, 32);
-        newData = true;
+        return;
     }
+    if (!isUnlocked)
+    {
+        return;
+    }
+    // Switch between commands
+    switch (dataBuffer[0])
+    {
+    case CMD_ABORT:
+    {
+        abortISR();
+    }
+    case CMD_DETONATE:
+    {
+        digitalWrite(PIN_LED_R, HIGH);
+        delay(slaveConfig.detonationPulseTime);
+        digitalWrite(PIN_LED_R, LOW);
+    }
+    case CMD_CONFIG:
+    {
+        receiveConfigFromMaster(&slaveConfig, dataBuffer);
+    }
+    }
+    newData = false;
 }
-
-void showData()
-{
-    if (newData == true)
-    {
-        Serial.println("Data received");
-        for (int i = 0; i < 32; i++)
-        {
-            Serial.print((int)dataReceived[i]);
-            Serial.print(" - ");
-            Serial.print((char)dataReceived[i]);
-            Serial.print(",");
-        }
-        Serial.println();
-        oled.setFont(Adafruit5x7);
-        oled.clear();
-        oled.print(dataReceived);
-        if (dataReceived[0] == 10)
-        {
-            digitalWrite(PIN_RELAY, HIGH);
-            delay(slaveConfig.detonationPulseTime);
-            digitalWrite(PIN_RELAY, LOW);
-        }
-        newData = false;
-    }
-}*/
 
 void abortISR()
 {
@@ -163,13 +164,15 @@ void radioISR()
 {
     if (!isUnlocked)
     {
+        // Flush any already-present packets, for safety on the first unlock
+        radio.flush_rx();
         return;
     }
     bool tx_ok, tx_fail, rx_ready;
     radio.whatHappened(tx_ok, tx_fail, rx_ready);
     if (radio.available())
     {
-        radio.read(&dataReceived, 32);
+        radio.read(&dataBuffer, 32);
+        newData = true;
     }
-    digitalWrite(PIN_LED_B, HIGH);
 }
