@@ -109,7 +109,6 @@ void setup()
 
 void loop()
 {
-
     if (btnCenter.isPressed())
     {
         screenIdx++;
@@ -119,12 +118,10 @@ void loop()
     if (isUnlocked)
     {
         uint8_t detbuf[1] = {CMD_DETONATE};
-        uint8_t abbuf[1] = {CMD_ABORT};
         if (digitalRead(PIN_DETONATE))
         {
-            radio.write(detbuf, 1); // write detonate command
-            delay(2000); // wait 2 seconds
-            radio.write(abbuf, 1); // write abort command
+            radio.write(detbuf, 1);
+            delay(200);
         }
     }
 }
