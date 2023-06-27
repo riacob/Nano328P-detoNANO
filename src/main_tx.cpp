@@ -134,7 +134,9 @@ void abortISR()
     oled.println("");
     oled.println("REBOOT");
     oled.println("DEVICE");
+    uint8_t buf[1] = {CMD_ABORT};
     while (1)
     {
+        radio.write(buf,1);
     }
 }
