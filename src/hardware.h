@@ -39,10 +39,12 @@
 #define RF24_RETRIES_COUNT 15
 #define RF24_RETRIES_DELAY 15
 #define DEBUG true
+#define WATCHDOG_TIMEOUT_MILLIS 10000
 
 // Commands in packets
 #define CMD_DETONATE 'D'
 #define CMD_CONFIG 'C'
 #define CMD_ABORT 'A'
+#define CMD_WATCHDOG 'W'
 
 #endif

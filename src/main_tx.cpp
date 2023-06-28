@@ -100,6 +100,12 @@ void setup()
     // Make sure RF24 is okay
     if (!radiook)
     {
+        oled.setFont(TimesNewRoman16_bold);
+        oled.clear();
+        oled.println("ERROR");
+        oled.println("");
+        oled.println("FAULTY");
+        oled.println("RADIO");
         Serial.println("ERROR RADIO MODULE IS MISSING");
         while (1)
         {
@@ -121,7 +127,7 @@ void loop()
         if (digitalRead(PIN_DETONATE))
         {
             radio.write(detbuf, 1);
-            delay(200);
+            delay(20);
         }
     }
 }
@@ -137,6 +143,6 @@ void abortISR()
     uint8_t buf[1] = {CMD_ABORT};
     while (1)
     {
-        radio.write(buf,1);
+        radio.write(buf, 1);
     }
 }

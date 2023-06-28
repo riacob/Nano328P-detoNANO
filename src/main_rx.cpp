@@ -99,6 +99,12 @@ void setup()
     // Make sure RF24 is okay
     if (!radiook)
     {
+        oled.setFont(TimesNewRoman16_bold);
+        oled.clear();
+        oled.println("ERROR");
+        oled.println("");
+        oled.println("FAULTY");
+        oled.println("RADIO");
         Serial.println("ERROR RADIO MODULE IS MISSING");
         while (1)
         {
@@ -132,16 +138,30 @@ void handlePackets()
     case CMD_ABORT:
     {
         abortISR();
+        break;
     }
     case CMD_DETONATE:
     {
-        digitalWrite(PIN_LED_R, HIGH);
+        // If device is disarmed, flush packet and return
+        if (!digitalRead(PIN_ARM))
+        {
+            radio.flush_rx();
+            digitalWrite(PIN_RELAY, LOW);
+            break;
+        }
+        // Else detonate
+        digitalWrite(PIN_LED_B, HIGH);
         delay(slaveConfig.detonationPulseTime);
-        digitalWrite(PIN_LED_R, LOW);
+        digitalWrite(PIN_LED_B, LOW);
+        break;
     }
     case CMD_CONFIG:
     {
         receiveConfigFromMaster(&slaveConfig, dataBuffer);
+        break;
+    }
+    case CMD_WATCHDOG:
+    {
     }
     }
     newData = false;

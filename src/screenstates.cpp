@@ -1,4 +1,5 @@
 #include "screenstates.h"
+#include "userconfig.h"
 
 void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedButton *btnCenter, DebouncedButton *btnRight, DebouncedButton *btnLeft, uint8_t *isUnlocked, int *screenIdx, userconfig_s *config, userconfig_s *slaveConfig)
 {
@@ -353,6 +354,44 @@ void switchScreenState(bool isSystemScreen, SSD1306AsciiAvrI2c *oled, DebouncedB
             }
             okPressed = btnCenter->isPressed();
         }
+        break;
+    }
+    // Save config to eeprom
+    case STATE_USR_EDIT_SAVEEEPROM:
+    {
+        oled->setFont(font5x7);
+        oled->clear();
+        oled->println("Save cfg to EEPROM");
+        oled->println("Press up and down");
+        do
+        {
+            if (btnRight->isPressed() && btnLeft->isPressed())
+            {
+                writeConfig(config);
+                oled->setFont(font5x7);
+                oled->clear();
+                oled->println("EEPROM written");
+            }
+        } while (!(btnCenter->isPressed()));
+        break;
+    }
+    // Load config from eeprom
+    case STATE_USR_EDIT_LOADEEPROM:
+    {
+        oled->setFont(font5x7);
+        oled->clear();
+        oled->println("Load cfg from EEPROM");
+        oled->println("Press up and down");
+        do
+        {
+            if (btnRight->isPressed() && btnLeft->isPressed())
+            {
+                readConfig(config);
+                oled->setFont(font5x7);
+                oled->clear();
+                oled->println("EEPROM read");
+            }
+        } while (!(btnCenter->isPressed()));
         break;
     }
     // TRANSMITTER ONLY SETTINGS
