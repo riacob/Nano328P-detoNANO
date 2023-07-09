@@ -10,6 +10,7 @@
  */
 #include "userconfig.h"
 #include "hardware.h"
+#include "debug.h"
 
 void setDefaultMasterConfig(userconfig_s *config)
 {
@@ -234,12 +235,12 @@ void transmitConfigToSlave(userconfig_s *config, RF24 *radio)
 
     if (tries >= maxtries)
     {
-        Serial.println("config not written");
+        debugln("config not written");
         tries = 0;
     }
     else
     {
-        Serial.println("successfully written config");
+        debugln("successfully written config");
         tries = 0;
     }
 }
@@ -352,59 +353,59 @@ int receiveConfigFromMaster(userconfig_s *config, uint8_t *dataBuffer)
 void printConfig(userconfig_s *config)
 {
     int i;
-    Serial.print("Role: ");
+    debug("Role: ");
     if (config->ownID[0] == 'M')
     {
-        Serial.println("TRANSMITTER");
+        debugln("TRANSMITTER");
     }
     else
     {
-        Serial.println("RECEIVER");
+        debugln("RECEIVER");
     }
-    Serial.print("radioChannel: ");
-    Serial.println(config->radioChannel);
-    Serial.print("targetID (char): ");
+    debug("radioChannel: ");
+    debugln(config->radioChannel);
+    debug("targetID (char): ");
     for (i = 0; i < 5; i++)
     {
-        Serial.print((char)config->targetID[i]);
-        Serial.print(" ");
+        debug((char)config->targetID[i]);
+        debug(" ");
     }
-    Serial.println();
-    Serial.print("targetID (int): ");
+    debugln();
+    debug("targetID (int): ");
     for (i = 0; i < 5; i++)
     {
-        Serial.print((int)config->targetID[i]);
-        Serial.print(" ");
+        debug((int)config->targetID[i]);
+        debug(" ");
     }
-    Serial.println();
-    Serial.print("ownID (char): ");
+    debugln();
+    debug("ownID (char): ");
     for (i = 0; i < 5; i++)
     {
-        Serial.print((char)config->ownID[i]);
-        Serial.print(" ");
+        debug((char)config->ownID[i]);
+        debug(" ");
     }
-    Serial.println();
-    Serial.print("ownID (int): ");
+    debugln();
+    debug("ownID (int): ");
     for (i = 0; i < 5; i++)
     {
-        Serial.print((int)config->targetID[i]);
-        Serial.print(" ");
+        debug((int)config->targetID[i]);
+        debug(" ");
     }
-    Serial.println();
-    Serial.print("detonationDelay: ");
-    Serial.println(config->detonationDelay);
-    Serial.print("pinEnabled: ");
-    Serial.println(config->pinEnabled ? "yes" : "no");
-    Serial.print("pin: ");
+    debugln();
+    debug("detonationDelay: ");
+    debugln(config->detonationDelay);
+    debug("pinEnabled: ");
+    debugln(config->pinEnabled ? "yes" : "no");
+    debug("pin: ");
     for (i = 0; i < 4; i++)
     {
-        Serial.print((int)config->pin[i]);
-        Serial.print(" ");
+        debug((int)config->pin[i]);
+        debug(" ");
     }
-    Serial.println();
-    Serial.print("detonationPulseTime: ");
-    Serial.print(config->detonationPulseTime);
-    Serial.println();
+    debugln();
+    debug("detonationPulseTime: ");
+    debug(config->detonationPulseTime);
+    debugln();
 }
 
 void writeConfig(userconfig_s *config)
@@ -425,12 +426,12 @@ void printEEPROM()
     uint8_t j = 0;
     for (uint16_t i = 0; i < EEPROM.length(); i++)
     {
-        Serial.print((int)EEPROM.read(i));
-        Serial.print(" ");
+        debug((int)EEPROM.read(i));
+        debug(" ");
         j++;
         if (j == 32)
         {
-            Serial.println();
+            debugln();
             j = 0;
         }
     }

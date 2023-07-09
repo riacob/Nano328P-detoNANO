@@ -21,6 +21,7 @@
 #include "userconfig.h"
 #include "screenstates.h"
 #include "debounce.h"
+#include "debug.h"
 userconfig_s slaveConfig;
 
 RF24 radio(PIN_RF24_CE, PIN_RF24_CSN);
@@ -40,6 +41,7 @@ void radioISR();
 
 void setup()
 {
+    Serial.begin(BAUDRATE);
     bool radiook = false;
     // Initialize GPIOs
     pinMode(PIN_LED_R, OUTPUT);
@@ -82,19 +84,16 @@ void setup()
     delay(100);
     switchScreenState(false, &oled, &btnCenter, &btnRight, &btnLeft, &isUnlocked, &screenIdx, &slaveConfig);
 
-#if DEBUG == true
-    Serial.begin(BAUDRATE);
     printf_begin();
-    Serial.println("**************** RF24 ****************");
+    debugln("**************** RF24 ****************");
     radio.printPrettyDetails();
-    Serial.print("Is RF24 module connected?: ");
-    Serial.println(radio.isChipConnected() ? "yes" : "no");
-    Serial.println("**************** CONFIG ****************");
+    debug("Is RF24 module connected?: ");
+    debugln(radio.isChipConnected() ? "yes" : "no");
+    debugln("**************** CONFIG ****************");
     printConfig(&slaveConfig);
-    Serial.println("**************** EEPROM ****************");
+    debugln("**************** EEPROM ****************");
     printEEPROM();
-    Serial.println("**************** DEBUG ****************");
-#endif
+    debugln("**************** DEBUG ****************");
 
     // Make sure RF24 is okay
     if (!radiook)
@@ -105,7 +104,7 @@ void setup()
         oled.println("");
         oled.println("FAULTY");
         oled.println("RADIO");
-        Serial.println("ERROR RADIO MODULE IS MISSING");
+        debugln("ERROR RADIO MODULE IS MISSING");
         while (1)
         {
         }

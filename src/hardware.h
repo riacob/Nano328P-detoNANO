@@ -38,7 +38,6 @@
 #define RF24_DATARATE RF24_250KBPS
 #define RF24_RETRIES_COUNT 15
 #define RF24_RETRIES_DELAY 15
-#define DEBUG true
 #define WATCHDOG_TIMEOUT_MILLIS 10000
 
 // Commands in packets
