@@ -149,9 +149,11 @@ void handlePackets()
             break;
         }
         // Else detonate
+        digitalWrite(PIN_RELAY, HIGH);
         digitalWrite(PIN_LED_B, HIGH);
         delay(slaveConfig.detonationPulseTime);
         digitalWrite(PIN_LED_B, LOW);
+        digitalWrite(PIN_RELAY, LOW);
         break;
     }
     case CMD_CONFIG:
